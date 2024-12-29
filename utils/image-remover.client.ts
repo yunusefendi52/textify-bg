@@ -1,11 +1,15 @@
 import { AutoModel, AutoProcessor, env, PreTrainedModel, Processor, RawImage } from "@huggingface/transformers"
 
-var model: PreTrainedModel
-var processor: Processor
+var model: PreTrainedModel | undefined
+var processor: Processor | undefined
 
 type ModelType = {
     model: PreTrainedModel
     processor: Processor
+}
+
+export function isModelCached() {
+    return model && processor ? true : false
 }
 
 export async function loadModel(): Promise<ModelType> {
@@ -14,7 +18,7 @@ export async function loadModel(): Promise<ModelType> {
         throw new Error('WebGPU is not supported in this browser.')
     }
 
-    if (!model || !processor) {
+    if (!isModelCached()) {
         const model_id = 'briaai/RMBG-1.4'
         env.backends.onnx.wasm!.proxy = false
         model = await AutoModel.from_pretrained(model_id, {
@@ -23,8 +27,8 @@ export async function loadModel(): Promise<ModelType> {
         processor = await AutoProcessor.from_pretrained(model_id, {})
     }
     return {
-        model,
-        processor,
+        model: model!,
+        processor: processor!,
     }
 }
 
