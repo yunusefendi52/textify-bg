@@ -1,44 +1,57 @@
 <template>
-    <UButton label="Pick Your Photo" @click="pickImage" />
-    <UButton label="Draw" @click="draw" />
-    <input ref="fileEl" type="file" accept="image/*" @change="previewFiles" hidden>
-    <canvas ref="canvasEl"></canvas>
+    <input ref="fileInput" type="file" hidden accept="image/*" @change="fileInputChange">
+    <div class="p-5 flex flex-row gap-2 items-center">
+        <span class="text-3xl font-medium flex-1">textify-bg</span>
+    </div>
+    <div class="flex h-[620px] flex-row gap-2 p-5">
+        <div class="flex-1 flex flex-col gap-2">
+            <div class="flex flex-row gap-2">
+                <UButton label="Pick Image" @click="pickImage" />
+                <UButton label="Start Process" @click="processImage" />
+            </div>
+            <ALayer class="flex-1" :raw-image="rawImage" :background-image="backgroundImage" :front-image="frontImage"
+                :text-bg="textBg" />
+        </div>
+        <div class="flex flex-col w-[300px] gap-3">
+            <UInput v-model="textBg" placeholder="Text in background" size="lg" />
+            <div class="flex flex-col gap-3">
+                <span class="text-sm">Text Vertical Position</span>
+                <USlider />
+            </div>
+        </div>
+    </div>
 </template>
 
 <script setup lang="ts">
-const configKonva = {
-    width: 200,
-    height: 200
-}
-const configCircle = {
-    x: 100,
-    y: 100,
-    radius: 70,
-    fill: "red",
-    stroke: "black",
-    strokeWidth: 4
-}
-const fileEl = ref<HTMLInputElement>()
-const canvasEl = ref<HTMLCanvasElement>()
-function previewFiles(_: Event) {
-    const file = fileEl.value!.files![0]!
-    var img = new Image;
-    img.onload = function () {
-        const ctx = canvasEl.value!.getContext("2d")!
-        canvasEl.value!.height = img.naturalHeight
-        canvasEl.value!.width = img.naturalWidth
-        ctx.drawImage(img, 0, 0)
-    }
-    img.src = URL.createObjectURL(file);
-}
+const fileInput = ref<HTMLInputElement>()
+
+const rawImage = ref<string>()
+const backgroundImage = ref<string>()
+const frontImage = ref<string>()
+const textBg = ref('')
+
 function pickImage() {
-    fileEl.value?.showPicker()
+    fileInput.value!.click()
 }
 
-function draw() {
-    const ctx = canvasEl.value!.getContext("2d")!;
-    ctx.fillStyle = "green";
-    ctx.fillText(text, x, y)
-    ctx.clearRect(x, y, w, h)
+function fileInputChange() {
+    const file = fileInput.value?.files
+    if (file) {
+        rawImage.value = URL.createObjectURL(file.item(0)!)
+    }
+}
+
+const isReady = ref()
+
+async function processImage() {
+    if (!rawImage.value) {
+        return
+    }
+
+    const modelType = await loadModel()
+    isReady.value = true
+    const p = await imageRemover(rawImage.value, modelType)
+    backgroundImage.value = p.originalImg.toString()
+    frontImage.value = p.processedImg
 }
 </script>
