@@ -3,7 +3,7 @@
 
     </div>
     <template v-else>
-        <Application :height="height" :width="width" :background-alpha="0">
+        <Application :height="height" :width="width" :background-alpha="0" :antialias="true" :auto-density="true">
             <sprite v-if="backgroundImage || rawImage" :texture="backgroundImage! || rawImage!" :height="height"
                 :width="width" />
             <Text :anchor-x="0.5" :anchor-y="0.5" :x="width / 2" :y="height * verticalCenterPos" :style="{
